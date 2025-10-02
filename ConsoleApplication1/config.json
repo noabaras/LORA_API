@@ -1,0 +1,105 @@
+{
+  "AT_Commands": {
+    "init1": [
+      {
+        "command": "AT",
+        "type": "basic",
+        "description": "בדיקת תקשורת"
+      },
+      {
+        "command": "ATZ",
+        "type": "set",
+        "description": "אתחול"
+      },
+      {
+        "command": "AT+MODEUS=1",
+        "type": "set",
+        "description": "מצב P2P"
+      },
+      {
+        "command": "ATZ",
+        "type": "set",
+        "description": "אתחול נוסף"
+      },
+      {
+        "command": "AT+P2PRFPROFILEUS=5",
+        "type": "set",
+        "description": "פרופיל רדיו"
+      },
+      {
+        "command": "AT+P2PRFCHANNELUS=64",
+        "type": "set",
+        "description": "ערוץ רדיו"
+      },
+      {
+        "command": "AT+P2PTXPOWERUS=14",
+        "type": "set",
+        "description": "b"
+      }
+    ],
+    "init": [
+      {
+        "command": "AT",
+        "type": "basic",
+        "description": "בדיקת תקשורת"
+      },
+      {
+        "command": "ATZ",
+        "type": "set",
+        "description": "אתחול רך ולהמתין ל-READY"
+      },
+      {
+        "command": "AT+RUS=P2PRFPROFILE,EU868",
+        "type": "set",
+        "description": "פרופיל EU868"
+      },
+      {
+        "command": "AT+RUS=P2PRFFREQ,868100000",
+        "type": "set",
+        "description": "תדר 868.1MHz"
+      },
+      {
+        "command": "AT+RUS=P2PRFBW,125000",
+        "type": "set",
+        "description": "רוחב פס 125kHz"
+      },
+      {
+        "command": "AT+RUS=P2PRFSF,7",
+        "type": "set",
+        "description": "Spreading Factor = 7"
+      },
+      {
+        "command": "AT+RUS=P2PRFCR,4/5",
+        "type": "set",
+        "description": "Coding Rate = 4/5"
+      },
+      {
+        "command": "AT+RUS=P2PRFTXPWR,14",
+        "type": "set",
+        "description": "עוצמת שידור 14dBm"
+      }
+    ],
+    "listen": [
+      {
+        "command": "AT+P2PRX=1",
+        "type": "set",
+        "description": "כניסה למצב האזנה"
+      }
+    ],
+
+    "send": [
+      {
+        "command": "AT+P2PBROADCASTTX=",
+        "type": "set",
+        "description": "שליחת "
+      }
+    ],
+    "status": [
+      {
+        "command": "AT",
+        "type": "basic",
+        "description": "בדיקה חוזרת"
+      }
+    ]
+  }
+}
