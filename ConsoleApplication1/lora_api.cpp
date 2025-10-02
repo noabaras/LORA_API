@@ -433,3 +433,6 @@ static void print_last_error(const char* where) {
     DWORD e = GetLastError();
     std::cerr << where << " failed. GetLastError=" << e << "\n";
 }
+void tri() {
+
+}

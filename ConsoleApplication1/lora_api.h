@@ -25,3 +25,4 @@ int isLoRaDevice(const char* portName);
 bool CorrectsyntaxAT(const std::string& cmd);
 static void print_last_error(const char* where);
 std::string readResponse(HANDLE hPort);
+//vbbb
