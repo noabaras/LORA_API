@@ -10,5 +10,6 @@ uint8_t calcCRC8(const std::vector<uint8_t>& data) {
                 crc <<= 1;
         }
     }
+    AppendOutputToGUI(hwndOutput, "crc" + crc);
     return crc;
 }

@@ -84,9 +84,15 @@ std::string intToHexByte(int value) {
 size_t hexToSizeT(const std::string& hex) {
     return static_cast<size_t>(strtoull(hex.c_str(), nullptr, 16));
 }
+/*
 char hexToChar(const std::string& hex) {
     return static_cast<char>(strtol(hex.c_str(), nullptr, 16));
 }
+*/
+uint8_t hexToChar(const std::string& hex) {
+    return static_cast<uint8_t>(std::stoul(hex, nullptr, 16));
+}
+
 std::string hexToAscii(const std::string& hex) {
     std::string ascii;
     ascii.reserve(hex.size() / 2);

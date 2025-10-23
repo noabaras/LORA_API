@@ -17,11 +17,15 @@ using namespace std;
 typedef struct {
     size_t Endseq;
     unsigned char seq;      // מספר רצף
-    unsigned char payload[SIZE];
+unsigned char payload[SIZE];
+    //std::vector<uint8_t> massage;
     uint8_t crc8;     // חישוב CRC על כל ההודעה לפניו
 } lora_paket;
 std::string hexToAscii(const std::string& hex);
-char hexToChar(const std::string& hex);
+//char hexToChar(const std::string& hex);
+uint8_t hexToChar(const std::string& hex);
+
+
 size_t hexToSizeT(const std::string& hex);
 std::string intToHexByte(int value);
 std::string paketToHex(const lora_paket& p);
@@ -32,6 +36,6 @@ std::string WStringToUtf8(const std::wstring& w);
 std::string BytesToHex(const std::string& bytes);
 bool isHexString(const std::string& s);
 size_t hexToSizeT(const std::string& hex);
-char hexToChar(const std::string& hex);
+//char hexToChar(const std::string& hex);
 std::string hexToAscii(const std::string& hex);
 std::string toHexSizeT(size_t value);

@@ -48,6 +48,8 @@ std::string decodeCobs(const std::string& cobs) {
             decoded += "00";
         }
     }
+    
+
     AppendOutputToGUI(hwndOutput, "decod" + decoded);
     return decoded;
 }

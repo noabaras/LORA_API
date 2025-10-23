@@ -1,4 +1,5 @@
 ﻿#include "lora_api.h"
+// הגדרת הגדרות לפורט קצב העברת נתונים ערוץ תקשורת ועוד
 bool setupPort(HANDLE h) {
     DCB dcb{};
     dcb.DCBlength = sizeof(dcb);
@@ -46,6 +47,7 @@ bool setupPort(HANDLE h) {
     // std::cout << "succesfull connected";
     return true;
 }
+//אחראית לאתחול מלא של הרכיב כולל איפוס באפרים פנימיים ושליחת פקודות מיוחדות
 bool resetMCU_like_WE(const char* comName) {
     HANDLE hPort = openingPort(comName);
     if (!isConnected) {
@@ -112,6 +114,7 @@ std::string readResponse(HANDLE hPort) {
 
     return response;
 }
+//אחראית לשליחת פקודה לפורט שהתקבל
 std::string sendAT(HANDLE h, const char* cmd) {
 
     if (!CorrectsyntaxAT(cmd)) {
@@ -178,6 +181,7 @@ std::string sendAT(HANDLE h, const char* cmd) {
 
     return resp;
 }
+//פותחת את הפורט על ידי ניסיון קריאה
 HANDLE openingPort(const char* portName) {
 
     HANDLE h = CreateFileA(
@@ -361,6 +365,7 @@ void returnLoRaPorts() {
     }
     return;
 }
+//מציג את כל התקני הלורה שמחוברים למחשב
 int isLoRaDevice(const char* portName) {
 
 
@@ -432,7 +437,4 @@ bool CorrectsyntaxAT(const std::string& cmd) {
 static void print_last_error(const char* where) {
     DWORD e = GetLastError();
     std::cerr << where << " failed. GetLastError=" << e << "\n";
-}
-void tri() {
-
 }

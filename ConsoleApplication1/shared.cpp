@@ -1,4 +1,5 @@
 #include "shared.h"
+//הצגת פלט למשתמש על המסך שהפונקציה הזו קיבלה!
 void AppendOutputToGUI(HWND hwndEdit, const std::string& s)
 {
     if (!hwndEdit) return;
@@ -25,6 +26,7 @@ std::wstring SafeStringForGUI(const std::string& str)
     }
     return wstr;
 }
+// מחזירה חילוק של שתי מהספרים ואם יש שארית מעלה ב1
 int divCeil(int a, int b) {
     return (a + b - 1) / b;
-}// מחזירה חילוק של שתי מהספרים ואם יש שארית מעלה ב1
+}

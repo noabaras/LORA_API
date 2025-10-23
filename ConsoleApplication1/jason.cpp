@@ -1,5 +1,5 @@
 #include "jason.h"
-
+//פותח דף גייסון
 json openJason() {
     try {
         std::ifstream f("config.json");

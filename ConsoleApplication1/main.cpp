@@ -15,6 +15,7 @@
 #include <regex>
 #include <algorithm>
 #include "shared.h"
+#include <cassert>
 
 #define MIN(a,b) (((a) < (b)) ? (a) : (b))
 #define SIZE 5
@@ -28,29 +29,7 @@ using namespace std;
 
 #include "jason.h"
 
-/*
-bool isHexString(const std::string& s);
-void TX(const std::string& dataHex);
-void RXThred(const char* comName);
-void SEND(const std::string& dataHex);
-bool setupPort(HANDLE h);
-bool resetMCU_like_WE(const char* comName);
-lora_paket PacketaRecovery(string data);
- std::string BytesToHex(const std::string& bytes);
- std::string WStringToUtf8(const std::wstring& w);
-std::wstring StringToWString(const std::string& str);
-std::wstring SafeStringForGUI(const std::string& str);
-std::string toHex(const unsigned char* data, int len);
-void HandlingCompletedPackage(string paket);
-bool isHexString(const std::string& s);
-uint8_t calcCRC8(const std::vector<uint8_t>& data);
-std::string buildCommandWithCRC(const std::string& base, const std::string& chunk);
-json openJason();
-void AppendOutputToGUI(HWND hwndEdit, const std::string& str);
-void disconnected(HANDLE h);
-std::string readResponse(HANDLE hPort);
-HANDLE openingPort(const char* portName);
-*/
+
 class PacketHandler {
     unsigned char lastSeq = 0;
     uint8_t lastcrc8;
@@ -92,12 +71,27 @@ class PacketHandler {
     }
 
     bool checkCrc(uint8_t crc8, vector<uint8_t>data) {
-        return(calcCRC8(data) == crc8);
+        AppendOutputToGUI(hwndOutput, "function:checkCrc" +to_string(crc8));
+        for (int i = 0; i < data.size(); i++) {
+            AppendOutputToGUI(hwndOutput, "function:checkCrc data" + data[i]);
+        }
+        std::ostringstream oss;
+        for (uint8_t b : data)
+            oss << std::hex << std::uppercase << std::setw(2) << std::setfill('0') << (int)b << " ";
+        AppendOutputToGUI(hwndOutput, "Receiver bytes for CRC: " + oss.str());
+        AppendOutputToGUI(hwndOutput, "Receiver expected CRC: " + std::to_string(crc8));
+        AppendOutputToGUI(hwndOutput, "Receiver calculated CRC: " + std::to_string(calcCRC8(data)));
+
+       // AppendOutputToGUI(hwndOutput, "function:checkCrc"+ to);
+        if (calcCRC8(data) == crc8) {
+            return true;
+        }
+        return false;
 
 
     }
 public:
-    void HandlingCompletedPackage(string paket) {
+    string HandlingCompletedPackage(string paket) {
 
         AppendOutputToGUI(hwndOutput, "HandlingCompletedPackage" + paket);
         // AppendOutputToGUI(hwndOutput, "HandlingCompletedPackage");
@@ -106,6 +100,8 @@ public:
 
         // הורדת הקובס
         decodingPaket = decodeCobs(paket);
+        AppendOutputToGUI(hwndOutput, " decodingPaket" + decodingPaket);
+        
         if (check_cobs(decodingPaket)) {
 
             // שחזור הפקטה
@@ -113,26 +109,29 @@ public:
 
             // AppendOutputToGUI(hwndOutput, paket.data);
             for (int i = 0; i < 5; i++) {
-                AppendOutputToGUI(hwndOutput, "Recovery:" + to_string(pakets.payload[i]));
+                AppendOutputToGUI(hwndOutput, "Recovery payload:" + to_string(pakets.payload[i]));
 
             }
-
+            //AppendOutputToGUI(hwndOutput, "Recovery payload:" + to_string(pakets.payload[i]));
             // חישוב CRC על התוכן
             std::vector<uint8_t> data;
             for (int i = 0; i < SIZE; i++) {
                 data.push_back(pakets.payload[i]);
+                AppendOutputToGUI(hwndOutput, " build data" + pakets.payload[i]);
             }
-
+            AppendOutputToGUI(hwndOutput, "pakets.crc8" + to_string(pakets.crc8));
             if (check_squ(pakets, lastcrc8)) {
                 if (checkCrc(pakets.crc8, data)) {
-                    AppendOutputToGUI(hwndOutput, " compatible crc");
+                    AppendOutputToGUI(hwndOutput2, " compatible crc");
+                    return "OK";
                 }
-                else { AppendOutputToGUI(hwndOutput, " compatible crc"); }
+                else { AppendOutputToGUI(hwndOutput2, " not compatible crc"); }
 
             }
         }
-        AppendOutputToGUI(hwndOutput, " end Recovery package");
-        lastcrc8 = pakets.crc8;
+        //AppendOutputToGUI(hwndOutput, " end Recovery package");
+        //lastcrc8 = pakets.crc8;
+        return "";
     }
 
     lora_paket PacketaRecovery(const std::string& data) {
@@ -149,12 +148,12 @@ public:
             start = pos + 2;
         }
         parts.push_back(data.substr(start));
-
+        /*
         if (parts.size() < 4) {
             AppendOutputToGUI(hwndOutput, "[ERR] not enough parts in data");
             return paket;
         }
-
+        */
         auto require_hex_even = [&](const std::string& s, const char* name) -> bool {
             if (s.size() % 2 != 0) {
                 AppendOutputToGUI(hwndOutput, std::string("[ERR] ") + name + " odd length");
@@ -186,8 +185,15 @@ public:
             paket.payload[i] = hexToChar(hexPair);
             AppendOutputToGUI(hwndOutput2, std::string("payload ") + std::to_string((int)paket.payload[i]));
         }
+        AppendOutputToGUI(hwndOutput, std::string("CRC part raw: '") + parts[3] + "'");
+        std::string crcPart = parts[3];
+        if (crcPart.size() > 2)
+            crcPart = crcPart.substr(0, 2); // ניקוי ה-00 העודפים
 
-        paket.crc8 = hexToChar(parts[3]);
+        paket.crc8 = hexToChar(crcPart);
+        AppendOutputToGUI(hwndOutput, "CRC part raw (clean): '" + crcPart + "'");
+
+       
 
         AppendOutputToGUI(hwndOutput, std::string("Endseq=") + std::to_string(paket.Endseq));
         AppendOutputToGUI(hwndOutput, std::string("seq=") + std::to_string((int)paket.seq));
@@ -219,17 +225,33 @@ lora_paket create_paket(unsigned char seq, const std::string& message, size_t En
     for (size_t i = 0; i < len; i++) {
         paket.payload[i] = (unsigned char)message[i];
     }
+    /*
     // אם ההודעה קצרה → נרפד בשאר אפסים
     for (size_t i = len; i < SIZE; i++) {
         paket.payload[i] = 0;
     }
-
+    */
     // חישוב CRC על התוכן
     std::vector<uint8_t> data;
     for (int i = 0; i < SIZE; i++) {
         data.push_back(paket.payload[i]);
     }
+    std::ostringstream oss;
+    for (uint8_t b : data)
+        oss << std::hex << std::uppercase << std::setw(2) << std::setfill('0') << (int)b << " ";
+    AppendOutputToGUI(hwndOutput2, "Sender bytes for CRC: " + oss.str());
+    AppendOutputToGUI(hwndOutput2, "Sender CRC result: " + std::to_string(calcCRC8(data)));
+
     paket.crc8 = calcCRC8(data);
+    
+    /*
+    std::vector<uint8_t> data;
+    for (size_t i = 0; i < message.size(); i += 2) {
+        std::string hexPair = message.substr(i, 2);
+        data.push_back(hexToChar(hexPair)); // ממיר 2 תווים לערך אמיתי
+    }
+    paket.crc8 = calcCRC8(data);
+    */
     AppendOutputToGUI(hwndOutput2, "ffffffffffff " + paket.payload[1]);
     return paket;
 }
@@ -277,7 +299,13 @@ void RXThred(const char* comName) {
                     if (rxBuffer.substr(rxBuffer.size() - 2) == "00") {
                         AppendOutputToGUI(hwndOutput, "Package completed");
                         string onlyPacket = extractRxPacket(paket);
-                        handler.HandlingCompletedPackage(onlyPacket);
+                       
+                        string re= handler.HandlingCompletedPackage(onlyPacket);
+                        //בדיקת תקינות פקטה
+                       if (re != "OK") {
+                           AppendOutputToGUI(hwndOutput, "faulty package");
+                           
+                       }
                     }
                 }
 
@@ -294,7 +322,7 @@ void RXThred(const char* comName) {
     }
 }
 void SEND(const std::string& dataHex) {
-
+    // מקבלים בהקסא את החבילה שרוצים לשלוח ואז מחלקים את החבילה ל10 תווים 
     lora_paket paket;
     string data = dataHex;
     string response = "";
@@ -313,12 +341,14 @@ void SEND(const std::string& dataHex) {
     while (!data.empty()) {
         count++;
         AppendOutputToGUI(hwndOutput2, "[DEBUG] Sending chunk #" + std::to_string(count) + " : " + chunk);
-        chunk = data.substr(0, std::min<size_t>(10, data.size())); // 5 תווים ASCII
+        chunk = data.substr(0, std::min<size_t>(10, data.size())); // 5 תווים ASCII פירוק החבילה ל-
         data.erase(0, chunk.size());
-        paket = create_paket(count, chunk, dataEnd);
+        
+        paket = create_paket(count, chunk, dataEnd);// בניית החבילה שתכלול את כל מנגנוני האבטחה
         auto& at = cfg["AT_Commands"]["send"];
         for (const auto& item : at) {
             if (!item.contains("command")) continue;
+            // לקיחת הפקודה שמתאימה לשליחה
             std::string base = item["command"].get<std::string>();
             /*
             if (!sendChunkWithRetry(chunk, base)) {
@@ -326,6 +356,7 @@ void SEND(const std::string& dataHex) {
                 return;
             }
             */
+            // ניסיון שליחת החבילה הכוללת
             if (!sendChunkWithRetry2(paket, base)) {
                 AppendOutputToGUI(hwndOutput2, "[ERROR] Could not send chunk after retries.");
                 return;
