@@ -34,41 +34,35 @@ class PacketHandler {
     unsigned char lastSeq = 0;
     uint8_t lastcrc8;
     lora_paket* paket;
-    bool check_cobs(string paket) {
-        // check size of paket this even
-        if (paket.size() % 2 != 0) {
-            AppendOutputToGUI(hwndOutput, "[ERR] Packet length not even (invalid HEX)");
+    bool check_cobs(const std::string& paket) {
+        if (paket.size() < 2 || (paket.size() % 2) != 0) {
+            AppendOutputToGUI(hwndOutput, "[ERR] Packet length invalid (must be >=2 and even)");
             return false;
         }
-        //Check that the number ends with two zeros.
-        if (paket.substr(paket.size() - 2) != "00") {
+        if (paket.compare(paket.size() - 2, 2, "00") != 0) {
             AppendOutputToGUI(hwndOutput, "[ERR] Packet missing 00 terminator");
             return false;
         }
-        // check that all paket in hex
-        for (char c : paket) {
-            if (!isxdigit((unsigned char)c)) {
+        for (unsigned char c : paket) {
+            if (!std::isxdigit(c)) {
                 AppendOutputToGUI(hwndOutput, "[ERR] Non-hex character in packet");
                 return false;
             }
         }
-
         return true;
-
     }
-    bool check_squ(lora_paket paket, uint8_t crc8) {
-        AppendOutputToGUI(hwndOutput, "last package" + std::to_string(lastSeq));
-        AppendOutputToGUI(hwndOutput, "paket.seq" + std::to_string(paket.seq));
-        if (paket.seq == lastSeq + 1) {
-            if (paket.crc8 != crc8) { lastSeq = paket.seq; }
 
+    bool check_squ(const lora_paket& p, uint8_t /*crc_from_prev*/) {
+        if ((uint8_t)(lastSeq + 1) == p.seq) {
+            lastSeq = p.seq;                // עדכון רק כשבסדר
             AppendOutputToGUI(hwndOutput, "OK sequence");
             return true;
         }
-
-        AppendOutputToGUI(hwndOutput, "Missing package " + std::to_string(lastSeq));
+        AppendOutputToGUI(hwndOutput, "Missing/Out-of-order: expected " +
+            std::to_string((uint8_t)(lastSeq + 1)) + " got " + std::to_string(p.seq));
         return false;
     }
+
 
     bool checkCrc(uint8_t crc8, vector<uint8_t>data) {
         AppendOutputToGUI(hwndOutput, "function:checkCrc" +to_string(crc8));
@@ -122,12 +116,15 @@ public:
             AppendOutputToGUI(hwndOutput, "pakets.crc8" + to_string(pakets.crc8));
             if (check_squ(pakets, lastcrc8)) {
                 if (checkCrc(pakets.crc8, data)) {
-                    AppendOutputToGUI(hwndOutput2, " compatible crc");
+                    lastcrc8 = pakets.crc8;     // ← חשוב
+                    AppendOutputToGUI(hwndOutput2, "compatible crc");
                     return "OK";
                 }
-                else { AppendOutputToGUI(hwndOutput2, " not compatible crc"); }
-
+                else {
+                    AppendOutputToGUI(hwndOutput2, "not compatible crc");
+                }
             }
+
         }
         //AppendOutputToGUI(hwndOutput, " end Recovery package");
         //lastcrc8 = pakets.crc8;
@@ -167,6 +164,11 @@ public:
             }
             return true;
         };
+        if (parts.size() < 4) {
+            AppendOutputToGUI(hwndOutput, "[ERR] not enough parts in data");
+            return paket;
+        }
+
 
         if (!require_hex_even(parts[0], "Endseq") ||
             !require_hex_even(parts[1], "seq") ||
@@ -362,6 +364,11 @@ void SEND(const std::string& dataHex) {
                 return;
             }
         }
+        if (data.empty()) {
+            AppendOutputToGUI(hwndOutput2, "[ERROR] Empty data, nothing to send");
+            return;
+        }
+
     }
     AppendOutputToGUI(hwndOutput2, " end send succesful");
 }
@@ -888,6 +895,7 @@ int main() {
     //Json();
     std::string myID1 = "01:02:09:A2";
     std::string myID2 = "01:02:09:04";
+
   //returnLoRaPorts();
     //
     //sendMessageToID(h2, "01:02:09:04", "hello");

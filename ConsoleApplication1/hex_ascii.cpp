@@ -50,8 +50,10 @@ std::string toHex(const unsigned char* data, int len) {
     return out;
 }
 uint8_t hexToByte(const std::string& hex) {
-    return static_cast<uint8_t>(std::stoi(hex, nullptr, 16));
+    if (hex.size() == 0) return 0;
+    return static_cast<uint8_t>(std::stoul(hex, nullptr, 16));
 }
+
 std::string paketToHex(const lora_paket& p) {
     AppendOutputToGUI(hwndOutput2, "paket to HEX" + p.payload[1]);
     std::string out;
